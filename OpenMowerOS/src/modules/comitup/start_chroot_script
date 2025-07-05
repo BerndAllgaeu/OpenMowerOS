@@ -36,6 +36,27 @@ systemctl_if_exists mask dhcpcd.service
 systemctl_if_exists mask wpa-supplicant.service
 systemctl_if_exists mask raspberrypi-net-mods.service
 
+# Ensure rfkill doesn't block WiFi by default
+echo_green "Configuring rfkill to unblock WiFi..."
+# Create a service to unblock WiFi on boot if needed
+cat > /etc/systemd/system/unblock-wifi.service << 'EOF'
+[Unit]
+Description=Unblock WiFi on boot
+After=systemd-rfkill.service
+Before=NetworkManager.service comitup.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/rfkill unblock wifi
+ExecStart=/usr/sbin/rfkill unblock wlan
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable unblock-wifi.service
+
 # copy the stock config to an example
 cp /etc/comitup.conf /etc/comitup.conf.example
 

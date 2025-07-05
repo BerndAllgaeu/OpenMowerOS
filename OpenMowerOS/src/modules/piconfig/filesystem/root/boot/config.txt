@@ -131,4 +131,10 @@ dtoverlay=uart5
 ### and Raspberry Pi Compute Modules 3, 3+ and 4.
 arm_64bit=1
 
+## WiFi Country Code Configuration
+## Set default country code to prevent rfkill WiFi blocking
+## Users should change this to their actual country code
+## Common codes: US, DE, GB, FR, IT, ES, etc.
+country=DE
+
 ####################################################
