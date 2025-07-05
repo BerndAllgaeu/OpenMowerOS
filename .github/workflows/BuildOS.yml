@@ -27,6 +27,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/dependencies.list') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+
       - name: Install Dependencies
         run: sudo apt-get update ; sudo apt-get install --yes coreutils p7zip-full qemu-user-static zip aria2
 
@@ -43,8 +51,24 @@ jobs:
           path: repository
           submodules: true
 
+      - name: Cache Raspberry Pi OS Image
+        uses: actions/cache@v4
+        with:
+          path: repository/OpenMowerOS/src/image/
+          key: raspios-image-${{ runner.os }}-${{ hashFiles('**/raspios_lite_arm64_latest.sha256') }}
+          restore-keys: |
+            raspios-image-${{ runner.os }}-
+
       - name: Download Raspberry Pi OS Source Image
-        run: aria2c -d repository/OpenMowerOS/src/image/ --seed-time=0 https://downloads.raspberrypi.org/raspios_lite_arm64_latest.torrent
+        run: |
+          if [ ! -f repository/OpenMowerOS/src/image/*.img ]; then
+            echo "Downloading fresh Raspberry Pi OS image..."
+            mkdir -p repository/OpenMowerOS/src/image/
+            aria2c -d repository/OpenMowerOS/src/image/ --seed-time=0 https://downloads.raspberrypi.org/raspios_lite_arm64_latest.torrent
+          else
+            echo "Using cached Raspberry Pi OS image"
+            ls -la repository/OpenMowerOS/src/image/
+          fi
 
       - name: Comparing Checksums
         run: |
@@ -53,6 +77,15 @@ jobs:
 
       - name: Update CustomPiOS Paths
         run: cd repository/OpenMowerOS/src && ../../../CustomPiOS/src/update-custompios-paths
+
+      - name: Cache Build Workspace
+        uses: actions/cache@v4
+        with:
+          path: repository/OpenMowerOS/src/workspace/
+          key: build-workspace-${{ runner.os }}-${{ hashFiles('repository/OpenMowerOS/src/modules/**') }}-${{ hashFiles('repository/OpenMowerOS/src/image/*.img') }}
+          restore-keys: |
+            build-workspace-${{ runner.os }}-${{ hashFiles('repository/OpenMowerOS/src/modules/**') }}-
+            build-workspace-${{ runner.os }}-
 
       - name: Build Image
         run: sudo modprobe loop && cd repository/OpenMowerOS/src && sudo bash -x ./build_dist && cd && sudo chown -R $USER ./*
