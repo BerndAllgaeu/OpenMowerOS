@@ -7,14 +7,14 @@ on:
       - "development"
 #      - "testing"
     paths:
-      - "src/**"
+      - "OpenMowerOS/src/**"
       - ".github/workflows/BuildOS.yml"
     tags-ignore:
       - "**"
   pull_request:
     types: [opened, edited, reopened, synchronize]
     paths:
-      - "src/**"
+      - "OpenMowerOS/src/**"
       - ".github/workflows/BuildOS.yml"
 
 # Allow to stop obsolete workflows
