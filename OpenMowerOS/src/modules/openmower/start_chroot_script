@@ -39,6 +39,8 @@ sed -i "s|/boot/comitup.conf|$BOOT_PATH/openmower/hotspot.txt|g ; s|/boot/comitu
 # Create compatibility symlink for old path if using new structure
 if [ "$BOOT_PATH" = "/boot/firmware" ]; then
     echo_green "Creating compatibility symlink for old boot path..."
+    # Remove existing target if it exists to avoid conflicts
+    rm -rf /boot/openmower
     ln -sf "$BOOT_PATH/openmower" /boot/openmower
 fi
 
