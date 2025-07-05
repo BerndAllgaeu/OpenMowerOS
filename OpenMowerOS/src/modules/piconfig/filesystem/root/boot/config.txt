@@ -101,6 +101,15 @@ gpu_mem=128
 ## Do not use more than 256Mb on Pi Model 4, it uses its own Management.
 #gpu_mem=256
 
+[pi5]
+## Raspberry Pi 5 specific configuration
+## Pi 5 uses different GPU architecture (VideoCore VII)
+## GPU memory is managed automatically, no gpu_mem setting needed
+## Enable PCIe for potential expansion boards
+dtparam=pciex1_gen=2
+## HDMI configuration for Pi 5
+hdmi_enable_4kp60=1
+
 [cm4]
 ## Enable XHCI USB 2 controller for USB support on CM4
 otg_mode=1
