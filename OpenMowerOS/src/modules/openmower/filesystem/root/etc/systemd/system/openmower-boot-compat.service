@@ -1,0 +1,15 @@
+[Unit]
+Description=OpenMower Boot Path Compatibility
+Documentation=https://github.com/ClemensElflein/OpenMowerOS
+Before=openmower.service openmower-debug.service
+After=local-fs.target
+RequiresMountsFor=/boot
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/openmower-boot-compat.sh
+User=root
+
+[Install]
+WantedBy=multi-user.target

@@ -23,6 +23,7 @@ echo_green "Copying files to root filesystem and applying permissions..."
 unpack /filesystem/root /
 chown -R pi:pi /home/pi
 chmod +x /home/pi/*.sh
+chmod +x /usr/local/bin/openmower-boot-compat.sh
 
 # Create OpenMower directory in correct boot partition
 mkdir -p "$BOOT_PATH/openmower"
@@ -35,17 +36,6 @@ wget -O "$BOOT_PATH/openmower/mower_config.txt" https://raw.githubusercontent.co
 # replace default comitup modules configs and paths
 echo_green "Replace comitup path and config..."
 sed -i "s|/boot/comitup.conf|$BOOT_PATH/openmower/hotspot.txt|g ; s|/boot/comitup.conf.settings-applied|$BOOT_PATH/openmower/hotspot.settings-applied|" /etc/systemd/system/comitup_config_copy.service
-
-# Create compatibility directory for old path if using new structure
-if [ "$BOOT_PATH" = "/boot/firmware" ]; then
-    echo_green "Creating compatibility symlink for old boot path..."
-    # Create a symlink from /boot/openmower to /boot/firmware/openmower for compatibility
-    # This ensures that services expecting /boot/openmower will work seamlessly
-    if [ ! -e /boot/openmower ]; then
-        ln -sf /boot/firmware/openmower /boot/openmower
-        echo_green "Created symlink: /boot/openmower -> /boot/firmware/openmower"
-    fi
-fi
 
 # ensure conflicting services are masked
 echo_green "ensure comitup/NetworkManager conflicting servies are masked..."
@@ -63,6 +53,9 @@ systemctl disable podman-auto-update.timer
 
 echo_green "Eanbling OpenMower on boot"
 systemctl enable openmower
+
+echo_green "Enabling OpenMower boot path compatibility"
+systemctl enable openmower-boot-compat
 
 #cleanup
 apt-get clean
