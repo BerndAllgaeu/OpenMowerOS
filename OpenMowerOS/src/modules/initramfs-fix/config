@@ -1,0 +1,2 @@
+[ -n "$INITRAMFS_FIX" ] || INITRAMFS_FIX=yes
+export INITRAMFS_FIX

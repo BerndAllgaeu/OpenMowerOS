@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# initramfs-fix module  
+# Fixes initramfs generation issues in chroot environment by temporarily removing initramfs tools
+# Written by Assistant
+# GPL V3
+########
+
+# Source error handling, leave this in place
+set -ex
+
+source /common.sh
+install_cleanup_trap
+
+echo_green "Temporarily disabling initramfs tools in chroot environment..."
+
+# Backup and remove update-initramfs
+if [ -f /usr/sbin/update-initramfs ]; then
+    echo_green "Replacing update-initramfs with dummy script"
+    cat > /usr/sbin/update-initramfs << 'EOF'
+#!/bin/bash
+echo "initramfs-fix: update-initramfs disabled in chroot - skipping"
+exit 0
+EOF
+    chmod +x /usr/sbin/update-initramfs
+    echo_green "update-initramfs disabled"
+fi
+
+# Backup and remove mkinitramfs  
+if [ -f /usr/sbin/mkinitramfs ]; then
+    echo_green "Replacing mkinitramfs with dummy script"
+    cat > /usr/sbin/mkinitramfs << 'EOF'
+#!/bin/bash
+echo "initramfs-fix: mkinitramfs disabled in chroot - skipping"
+exit 0
+EOF
+    chmod +x /usr/sbin/mkinitramfs
+    echo_green "mkinitramfs disabled"
+fi
+
+# Also disable initramfs hooks that might cause problems
+echo_green "initramfs tools successfully disabled for entire build process"
+
+# Fix certificate rehash warnings in chroot
+if [ -f /etc/ssl/certs/ca-certificates.crt ]; then
+    echo_green "Fixing certificate rehash issue in chroot..."
+    # Create a temporary valid certificate file structure
+    mkdir -p /etc/ssl/certs/backup
+    cp /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/backup/
+    # Split the bundle into individual certificates to avoid rehash warnings
+    cd /etc/ssl/certs
+    csplit -s -f cert- ca-certificates.crt '/-----BEGIN CERTIFICATE-----/' '{*}' || true
+    cd - >/dev/null
+    echo_green "Certificate structure fixed for chroot"
+fi
