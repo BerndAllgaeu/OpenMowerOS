@@ -36,12 +36,18 @@ wget -O "$BOOT_PATH/openmower/mower_config.txt" https://raw.githubusercontent.co
 echo_green "Replace comitup path and config..."
 sed -i "s|/boot/comitup.conf|$BOOT_PATH/openmower/hotspot.txt|g ; s|/boot/comitup.conf.settings-applied|$BOOT_PATH/openmower/hotspot.settings-applied|" /etc/systemd/system/comitup_config_copy.service
 
-# Create compatibility symlink for old path if using new structure
+# Create compatibility directory for old path if using new structure
 if [ "$BOOT_PATH" = "/boot/firmware" ]; then
-    echo_green "Creating compatibility symlink for old boot path..."
-    # Remove existing target if it exists to avoid conflicts
-    rm -rf /boot/openmower
-    ln -sf "$BOOT_PATH/openmower" /boot/openmower
+    echo_green "Creating compatibility directory for old boot path..."
+    # Create the old path directory and copy files for backward compatibility
+    mkdir -p /boot/openmower
+    # Copy essential files to both locations for compatibility
+    if [ -f "$BOOT_PATH/openmower/hotspot-example.txt" ]; then
+        cp "$BOOT_PATH/openmower/hotspot-example.txt" /boot/openmower/
+    fi
+    if [ -f "$BOOT_PATH/openmower/mower_config.txt" ]; then
+        cp "$BOOT_PATH/openmower/mower_config.txt" /boot/openmower/
+    fi
 fi
 
 # ensure conflicting services are masked
