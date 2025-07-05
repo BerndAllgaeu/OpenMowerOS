@@ -98,13 +98,71 @@ jobs:
           name: openmoweros-raspios-lite-latest.img.sha256
           path: openmoweros-raspios-lite-latest.img.sha256
 
+      - name: Create Development Release
+        if: github.ref == 'refs/heads/development'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "dev-${{ github.sha }}"
+          name: "Development Build - ${{ github.sha }}"
+          prerelease: true
+          body: |
+            🚧 **Development Build** 🚧
+            
+            This is an automated development build from the `development` branch.
+            - Commit: ${{ github.sha }}
+            - Build Date: ${{ github.run_id }}
+            
+            ⚠️ **Warning**: This is a development version and may contain experimental features.
+            Use at your own risk. For stable releases, use the main branch builds.
+            
+            ## Changes in this build:
+            - Latest development features and fixes
+            - All community improvements included
+            - OpenOCD temporarily disabled for build stability
+            
+            ## Supported Hardware:
+            - Raspberry Pi 3, 3+, 4, 400, 5
+            - Raspberry Pi Zero 2 W
+            - Compute Module 3, 3+, 4
+          files: |
+            openmoweros-raspios-lite-latest.img.xz
+            openmoweros-raspios-lite-latest.img.xz.sha256
+            openmoweros-raspios-lite-latest.img.sha256
+
       - name: Create Release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "latest"
-          name: "Latest OpenMowerOS Image"
-          prerelease: true
+          name: "Latest Stable OpenMowerOS Image"
+          prerelease: false
+          body: |
+            🚀 **Official OpenMowerOS Release** 🚀
+            
+            This is the latest stable release of OpenMowerOS.
+            - Build Date: ${{ github.run_id }}
+            - Based on Raspberry Pi OS Lite ARM64
+            
+            ## What's included:
+            - 🤖 Complete ROS2 environment for OpenMower
+            - 🐳 Podman container support
+            - 📶 ComitUp WiFi setup (captive portal)
+            - 🔧 All necessary drivers and configurations
+            - 🛠️ Hardware support for multiple UART interfaces
+            
+            ## Supported Hardware:
+            - ✅ Raspberry Pi 3, 3+, 4, 400, 5
+            - ✅ Raspberry Pi Zero 2 W  
+            - ✅ Compute Module 3, 3+, 4
+            
+            ## Installation:
+            1. Download the `.img.xz` file
+            2. Flash to SD card using Raspberry Pi Imager
+            3. Insert SD card into your Raspberry Pi
+            4. Follow OpenMower setup instructions
+            
+            ## Verification:
+            Use the provided `.sha256` files to verify download integrity.
           files: |
             openmoweros-raspios-lite-latest.img.xz
             openmoweros-raspios-lite-latest.img.xz.sha256

@@ -1,0 +1,130 @@
+name: Create Versioned Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes (optional)'
+        required: false
+        type: string
+        default: 'Manual release'
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Install Dependencies
+        run: sudo apt-get update ; sudo apt-get install --yes coreutils p7zip-full qemu-user-static zip aria2
+
+      - name: Checkout CustomPiOS
+        uses: actions/checkout@v4
+        with:
+          repository: "guysoft/CustomPiOS"
+          path: CustomPiOS
+
+      - name: Checkout OpenMowerOS
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          path: repository
+          submodules: true
+
+      - name: Download Raspberry Pi OS Source Image
+        run: aria2c -d repository/OpenMowerOS/src/image/ --seed-time=0 https://downloads.raspberrypi.org/raspios_lite_arm64_latest.torrent
+
+      - name: Comparing Checksums
+        run: |
+          cd repository/OpenMowerOS/src/image
+          curl -JL https://downloads.raspberrypi.org/raspios_lite_arm64_latest.sha256 | awk '{print $1"  "$2}' | sha256sum -c
+
+      - name: Update CustomPiOS Paths
+        run: cd repository/OpenMowerOS/src && ../../../CustomPiOS/src/update-custompios-paths
+
+      - name: Build Image
+        run: sudo modprobe loop && cd repository/OpenMowerOS/src && sudo bash -x ./build_dist && cd && sudo chown -R $USER ./*
+
+      - name: Copy and rename output image
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          cp ${{ github.workspace }}/repository/OpenMowerOS/src/workspace/*-raspios-*-lite.img openmoweros-${VERSION}-raspios-lite.img
+
+      - name: Upload failed Logfile
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-failed-${{ github.event.inputs.version }}.log
+          path: repository/OpenMowerOS/src/build.log
+
+      - name: Compress the image
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          CPU_COUNT="$(nproc)"
+          echo -e "\e[32mUsing ${CPU_COUNT} Cores for compression...\e[0m"
+          xz -efkvz9T"${CPU_COUNT}" openmoweros-${VERSION}-raspios-lite.img
+
+      - name: Calculating checksums
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          sha256sum openmoweros-${VERSION}-raspios-lite.img > openmoweros-${VERSION}-raspios-lite.img.sha256
+          sha256sum openmoweros-${VERSION}-raspios-lite.img.xz > openmoweros-${VERSION}-raspios-lite.img.xz.sha256
+
+      - name: Create Versioned Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: "OpenMowerOS ${{ github.event.inputs.version }}"
+          prerelease: ${{ github.event.inputs.prerelease }}
+          body: |
+            # OpenMowerOS ${{ github.event.inputs.version }}
+            
+            🚀 **Official OpenMowerOS Release ${{ github.event.inputs.version }}**
+            
+            ## Release Information
+            - **Version**: ${{ github.event.inputs.version }}
+            - **Build Date**: ${{ github.run_id }}
+            - **Branch**: ${{ github.ref_name }}
+            - **Commit**: ${{ github.sha }}
+            
+            ## Release Notes
+            ${{ github.event.inputs.release_notes }}
+            
+            ## What's included:
+            - 🤖 Complete ROS2 environment for OpenMower
+            - 🐳 Podman container support  
+            - 📶 ComitUp WiFi setup (captive portal)
+            - 🔧 All necessary drivers and configurations
+            - 🛠️ Hardware support for multiple UART interfaces
+            - 🎯 Raspberry Pi 5 support included
+            
+            ## Supported Hardware:
+            - ✅ Raspberry Pi 3, 3+, 4, 400, 5
+            - ✅ Raspberry Pi Zero 2 W
+            - ✅ Compute Module 3, 3+, 4
+            
+            ## Installation:
+            1. Download `openmoweros-${{ github.event.inputs.version }}-raspios-lite.img.xz`
+            2. Verify checksum with provided `.sha256` file
+            3. Flash to SD card using Raspberry Pi Imager or similar tool
+            4. Insert SD card into your Raspberry Pi
+            5. Follow OpenMower documentation for setup
+            
+            ## Files:
+            - `openmoweros-${{ github.event.inputs.version }}-raspios-lite.img.xz` - Compressed SD card image
+            - `openmoweros-${{ github.event.inputs.version }}-raspios-lite.img.xz.sha256` - Checksum for compressed image
+            - `openmoweros-${{ github.event.inputs.version }}-raspios-lite.img.sha256` - Checksum for uncompressed image
+          files: |
+            openmoweros-${{ github.event.inputs.version }}-raspios-lite.img.xz
+            openmoweros-${{ github.event.inputs.version }}-raspios-lite.img.xz.sha256
+            openmoweros-${{ github.event.inputs.version }}-raspios-lite.img.sha256
