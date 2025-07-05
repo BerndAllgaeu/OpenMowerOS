@@ -51,6 +51,14 @@ jobs:
           path: repository
           submodules: true
 
+      - name: Cache OpenOCD Build
+        uses: actions/cache@v4
+        with:
+          path: /tmp/openocd_cache
+          key: openocd-rp2040-v0.12.0-${{ runner.os }}-${{ hashFiles('repository/OpenMowerOS/src/modules/openocd/start_chroot_script') }}
+          restore-keys: |
+            openocd-rp2040-v0.12.0-${{ runner.os }}-
+
       - name: Cache Raspberry Pi OS Image
         uses: actions/cache@v4
         with:
