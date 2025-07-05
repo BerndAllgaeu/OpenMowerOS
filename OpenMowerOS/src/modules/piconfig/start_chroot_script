@@ -30,3 +30,17 @@ echo_green "Disabling Bluetooth related services..."
 systemctl_if_exists disable hciuart.service
 systemctl_if_exists disable bluetooth.service
 systemctl_if_exists disable bluealsa.service
+
+### Configure locale
+echo_green "Configuring locale to en_US.UTF-8..."
+# Ensure en_US.UTF-8 is available and set as default
+if [ -f /etc/locale.gen ]; then
+    # Uncomment en_US.UTF-8 if it's commented out
+    sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen || true
+    # Generate locales
+    locale-gen en_US.UTF-8 || echo "Warning: Could not generate en_US.UTF-8 locale"
+    # Set as default
+    echo "LANG=en_US.UTF-8" > /etc/default/locale
+    echo "LC_ALL=en_US.UTF-8" >> /etc/default/locale
+    update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 || echo "Warning: Could not update locale"
+fi

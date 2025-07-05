@@ -38,15 +38,12 @@ sed -i "s|/boot/comitup.conf|$BOOT_PATH/openmower/hotspot.txt|g ; s|/boot/comitu
 
 # Create compatibility directory for old path if using new structure
 if [ "$BOOT_PATH" = "/boot/firmware" ]; then
-    echo_green "Creating compatibility directory for old boot path..."
-    # Create the old path directory and copy files for backward compatibility
-    mkdir -p /boot/openmower
-    # Copy essential files to both locations for compatibility
-    if [ -f "$BOOT_PATH/openmower/hotspot-example.txt" ]; then
-        cp "$BOOT_PATH/openmower/hotspot-example.txt" /boot/openmower/
-    fi
-    if [ -f "$BOOT_PATH/openmower/mower_config.txt" ]; then
-        cp "$BOOT_PATH/openmower/mower_config.txt" /boot/openmower/
+    echo_green "Creating compatibility symlink for old boot path..."
+    # Create a symlink from /boot/openmower to /boot/firmware/openmower for compatibility
+    # This ensures that services expecting /boot/openmower will work seamlessly
+    if [ ! -e /boot/openmower ]; then
+        ln -sf /boot/firmware/openmower /boot/openmower
+        echo_green "Created symlink: /boot/openmower -> /boot/firmware/openmower"
     fi
 fi
 
