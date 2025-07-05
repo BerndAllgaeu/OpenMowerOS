@@ -12,7 +12,7 @@ export BASE_USER="openmower"
 export BASE_USER_PASSWORD="openmower"
 export BASE_OVERRIDE_HOSTNAME="openmower"
 
-export MODULES="base,pkgupgrade,piconfig,podman,comitup,openocd,openmower"
+export MODULES="base,initramfs-fix,pkgupgrade,piconfig,podman,comitup,openmower"
 
 
 # rpi-imager json generator settings
