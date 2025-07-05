@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Use compatibility path that works with both old and new Raspberry Pi OS
+# (symlink is created during image build if needed)
 source /boot/openmower/mower_config.txt
 
 # remove old firmware

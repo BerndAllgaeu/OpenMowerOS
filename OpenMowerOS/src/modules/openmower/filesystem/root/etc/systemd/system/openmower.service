@@ -13,6 +13,7 @@ StartLimitBurst=10
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
+# Use compatibility path that works with both old and new Raspberry Pi OS
 EnvironmentFile=/boot/openmower/openmower_version.txt
 Type=forking
 Restart=always

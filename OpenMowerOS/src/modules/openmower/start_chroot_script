@@ -12,20 +12,35 @@ set -ex
 source /common.sh
 install_cleanup_trap
 
+# Detect boot partition path (compatibility for newer Raspberry Pi OS)
+BOOT_PATH="/boot"
+if [ -d "/boot/firmware" ]; then
+    BOOT_PATH="/boot/firmware"
+fi
 
+echo_green "Using boot path: $BOOT_PATH"
 echo_green "Copying files to root filesystem and applying permissions..."
 unpack /filesystem/root /
 chown -R pi:pi /home/pi
 chmod +x /home/pi/*.sh
 
-cp /etc/comitup.conf.example /boot/openmower/hotspot-example.txt
+# Create OpenMower directory in correct boot partition
+mkdir -p "$BOOT_PATH/openmower"
+
+cp /etc/comitup.conf.example "$BOOT_PATH/openmower/hotspot-example.txt"
 
 echo_green "Get the latest mower_config.sh example..."
-wget -O /boot/openmower/mower_config.txt https://raw.githubusercontent.com/ClemensElflein/open_mower_ros/main/config/mower_config.sh.example
+wget -O "$BOOT_PATH/openmower/mower_config.txt" https://raw.githubusercontent.com/ClemensElflein/open_mower_ros/main/config/mower_config.sh.example
 
 # replace default comitup modules configs and paths
 echo_green "Replace comitup path and config..."
-sed -i 's|/boot/comitup.conf|/boot/openmower/hotspot.txt|g ; s|/boot/comitup.conf.settings-applied|/boot/openmower/hotspot.settings-applied|' /etc/systemd/system/comitup_config_copy.service
+sed -i "s|/boot/comitup.conf|$BOOT_PATH/openmower/hotspot.txt|g ; s|/boot/comitup.conf.settings-applied|$BOOT_PATH/openmower/hotspot.settings-applied|" /etc/systemd/system/comitup_config_copy.service
+
+# Create compatibility symlink for old path if using new structure
+if [ "$BOOT_PATH" = "/boot/firmware" ]; then
+    echo_green "Creating compatibility symlink for old boot path..."
+    ln -sf "$BOOT_PATH/openmower" /boot/openmower
+fi
 
 # ensure conflicting services are masked
 echo_green "ensure comitup/NetworkManager conflicting servies are masked..."
