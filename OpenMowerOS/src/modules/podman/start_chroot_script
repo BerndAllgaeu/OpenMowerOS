@@ -46,7 +46,7 @@ if [ "${PODMAN_COMPOSE}" == "stable" ] || [ "${PODMAN_COMPOSE}" == "devel" ]; th
     if [ "${PODMAN_COMPOSE}" == "stable" ]; then
         pip3 install podman-compose
     elif [ "${PODMAN_COMPOSE}" == "devel" ]; then
-        pip3 install https://github.com/containers/podman-compose/archive/devel.tar.gz
+        pip3 install https://github.com/containers/podman-compose/archive/main.tar.gz
     fi
 fi
 

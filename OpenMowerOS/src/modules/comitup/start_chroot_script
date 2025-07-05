@@ -23,7 +23,7 @@ install_cleanup_trap
 #fi
 
 echo_green "Installing comitup..."
-wget https://davesteele.github.io/comitup/latest/davesteele-comitup-apt-source_latest.deb
+wget https://davesteele.github.io/comitup/deb/davesteele-comitup-apt-source_1.3_all.deb -O davesteele-comitup-apt-source_latest.deb
 dpkg -i --force-all davesteele-comitup-apt-source_latest.deb
 rm davesteele-comitup-apt-source_latest.deb
 apt-get update --allow-releaseinfo-change
